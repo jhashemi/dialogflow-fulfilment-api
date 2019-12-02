@@ -33,9 +33,29 @@ module Dialogflow
           {}
         end
 
-        def output_contexts
-          fulfilment.output_contexts
+        def context_name(name:)
+          "#{session}/contexts/#{name}"
         end
+
+        def sync_attributes
+          {
+            sync_attributes: {
+              data: sync_builder.new(items: sync_items).build
+            }
+          }
+        end
+
+        def sync_builder
+          Dialogflow::Fulfilments::Decorators::OutputContexts::Sync::Builder
+        end
+
+        def sync_items
+          @sync_items ||= []
+        end
+
+        delegate :output_contexts,
+                 :session,
+                 to: :fulfilment
 
         def fulfilment
           @fulfilment ||= Dialogflow::Fulfilments::Parsers::Base.new(
