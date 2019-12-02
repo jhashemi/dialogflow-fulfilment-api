@@ -4,15 +4,17 @@ module Api
   module Dialogflow
     class FulfilmentsController < Api::Dialogflow::BaseController
       def create
-        handler.handle
+        response = handler_klass.new(
+          params: fulfilment_params
+        ).handle
+
+        response_successful(response)
       end
 
       private
 
-      def handler
-        @handler ||= Dialogflow::Fulfilments::Handlers::Base.new(
-          params: fulfilment_params
-        )
+      def handler_klass
+        ::Dialogflow::Fulfilments::Handlers::Base
       end
 
       def fulfilment_params

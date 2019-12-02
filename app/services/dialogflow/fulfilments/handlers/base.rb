@@ -5,7 +5,7 @@ module Dialogflow
     module Handlers
       class Base
         def initialize(params:)
-          self.params = params
+          self.params = params.to_h
         end
 
         def handle
@@ -23,9 +23,13 @@ module Dialogflow
         end
 
         def decorator_klass
-          "Dialogflow::Fulfilments::#{action}".constantize
+          "Dialogflow::Fulfilments::Decorators::#{action_klass}".constantize
         rescue NameError
           Dialogflow::Fulfilments::Decorators::Base
+        end
+
+        def action_klass
+          action.camelize
         end
 
         delegate :action, to: :fulfilment
