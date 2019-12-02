@@ -1,0 +1,43 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/owl-insurance-fulfilment-api
+    docker:
+      - image: circleci/ruby:2.5.1
+        environment:
+          PGHOST: localhost
+          PGUSER: owl-insurance-fulfilment-api
+          RAILS_ENV: test
+      - image: postgres:9.5
+        environment:
+          POSTGRES_USER: owl-insurance-fulfilment-api
+          POSTGRES_DB: owl-insurance-fulfilment-api_test
+          POSTGRES_PASSWORD: ""
+    steps:
+      - checkout
+
+      - type: cache-restore
+        name: Restore bundle cache
+        key: owl-insurance-fulfilment-api-{{ checksum "Gemfile.lock" }}
+
+      - run: bundle install --path vendor/bundle
+
+      - type: cache-save
+        name: Store bundle cache
+        key: owl-insurance-fulfilment-api-{{ checksum "Gemfile.lock" }}
+        paths:
+          - vendor/bundle
+
+      - run: dockerize -wait tcp://localhost:5432 -timeout 1m
+
+      - run: cp config/application.example.yml config/application.yml
+
+      - run: bundle exec rake db:setup
+
+      - run: bundle exec brakeman --exit-on-warn --quiet -f plain
+      - run: bundle exec rake
+deployment:
+  staging:
+    branch: master
+    commands:
+      - bin/deploy staging
